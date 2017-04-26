@@ -58,7 +58,6 @@ void doEncoder()
 	  } else {
 	    encoder0Pos--;
 	  }
-	  //Serial.println (encoder0Pos, DEC);
 }
 
 int moveToPos(unsigned char caseNo, unsigned char stopcrit)
@@ -116,9 +115,7 @@ int moveToPos(unsigned char caseNo, unsigned char stopcrit)
     	Position_float=CAN_MTS_Read(); delay(10);
     }
 
-
     return Position_float;
-
 }
 
 
