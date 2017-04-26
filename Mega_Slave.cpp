@@ -64,10 +64,10 @@ int moveToPos(unsigned char caseNo, unsigned char stopcrit)
 
 	switch(caseNo){
 	case 1://Approach the chain from left side
-		turnstep=5000;
+		turnstep=1000;
 		break;
 	case 2://Approach the chain from right side
-		turnstep=-5000;
+		turnstep=-1000;
 		break;
 	}
 
@@ -256,49 +256,37 @@ void loop()
     if(Receive_Master_Command=="02:04:06:01:01:01:01:01"){ // Reboot
         case_number=8;
     }
-    Serial.print(case_number);
+    //Serial.print(case_number);
     //case_number=2;
 
     switch(case_number){
     case 1://Initialization
         Flag_from_CAN_Read=0;
-        //Lift_Caliper_Tool(stepper_Z_L);
+        Lift_Caliper_Tool(stepper_Z_L);
 
         Serial.println("Blade Move Back To End"); // Blade move to back end
         for(int i=0; i<10; i++){
             Position_float=CAN_MTS_Read(); delay(10);
         }
 
-        stepper_blade_L.setMaxSpeed(250);
-
         while(Position_float>100){
             Position_float=CAN_MTS_Read();
 
-            stepper_blade_L.move(5000);
+            stepper_blade_L.move(1000);
             stepper_blade_L.run();
-            stepper_blade_L.runSpeed();
-
-            if(digitalRead(Proximity_Top)!=HIGH)
-            {
-            	stepper_Z_L.move(-1000);
-				stepper_Z_L.run();
-            }
-            else
-            {
-            	stepper_Z_L.stop();
-            }
+            //stepper_blade_L.runSpeed();
         }
         stepper_blade_L.stop();
         stepper_blade_L.setCurrentPosition(0);
         Serial.println("Initial Point Reached!");
 
-        stepper_blade_L.setMaxSpeed(150);
+        //stepper_blade_L.setMaxSpeed(150);
 
         //Record the MTS measurement into the position list (an average of the 10 times measurements)
         for(int i=0; i<10; i++){
 			position_val=CAN_MTS_Read(); delay(10);
 		}
-        positionlist[0]=position_val/10;
+        positionlist[0]=position_val;
         position_val=0;
 
         while(Flag_from_CAN_Read!=2){
