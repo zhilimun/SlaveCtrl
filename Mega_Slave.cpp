@@ -9,13 +9,7 @@
 #include <AccelStepper.h>
 #include <stdio.h>
 #include <avr/iom2560.h>
-#include "RotaryEncoder.h"
 #include <Arduino.h>
-
-//const int Proximity_Head = 23;
-//const int Proximity_Tail = 22;
-//const int Proximity_Top = 26;
-//const int Proximity_Bottom = 27;
 
 const int Proximity_Top = 22;
 const int Proximity_Bottom = 23;
@@ -70,10 +64,10 @@ int moveToPos(unsigned char caseNo, unsigned char stopcrit)
 
 	switch(caseNo){
 	case 1://Approach the chain from left side
-		turnstep=1000;
+		turnstep=5000;
 		break;
 	case 2://Approach the chain from right side
-		turnstep=-1000;
+		turnstep=-5000;
 		break;
 	}
 
@@ -165,7 +159,7 @@ void setup()
     stepper_blade_L.setAcceleration(30);
     stepper_blade_L.setCurrentPosition(0);
     // Vertical motor
-    stepper_Z_L.setMaxSpeed(100);
+    stepper_Z_L.setMaxSpeed(120);
     stepper_Z_L.setAcceleration(30);
     stepper_Z_L.setCurrentPosition(0);
 
@@ -275,11 +269,15 @@ void loop()
             Position_float=CAN_MTS_Read(); delay(10);
         }
 
+        stepper_blade_L.setMaxSpeed(250);
+
         while(Position_float>100){
             Position_float=CAN_MTS_Read();
 
-            stepper_blade_L.move(1000);
+            stepper_blade_L.move(5000);
             stepper_blade_L.run();
+            stepper_blade_L.runSpeed();
+
             if(digitalRead(Proximity_Top)!=HIGH)
             {
             	stepper_Z_L.move(-1000);
@@ -293,6 +291,8 @@ void loop()
         stepper_blade_L.stop();
         stepper_blade_L.setCurrentPosition(0);
         Serial.println("Initial Point Reached!");
+
+        stepper_blade_L.setMaxSpeed(150);
 
         //Record the MTS measurement into the position list (an average of the 10 times measurements)
         for(int i=0; i<10; i++){
@@ -356,7 +356,7 @@ void loop()
         Lift_Caliper_Tool(stepper_Z_L);
 
         //Drive the blade into the gap
-        while(Position_float<positionlist[1]+350){
+        while(Position_float<positionlist[1]+150){
                    Position_float=CAN_MTS_Read();
                    stepper_blade_L.move(-1000);
                    stepper_blade_L.run();
@@ -435,7 +435,7 @@ void loop()
 
         Serial.println("Blade Moves to #4"); // Blade move to position #4
         //Drive the blade into the gap
-	    while(Position_float<positionlist[3]+350){
+	    while(Position_float<positionlist[3]+150){
 				  Position_float=CAN_MTS_Read();
 				  stepper_blade_L.move(-1000);
 				  stepper_blade_L.run();
