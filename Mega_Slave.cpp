@@ -256,8 +256,9 @@ void loop()
     if(Receive_Master_Command=="02:04:06:01:01:01:01:01"){ // Reboot
         case_number=8;
     }
-    //Serial.print(case_number);
-    //case_number=2;
+    if(Receive_Master_Command=="02:04:06:01:02:03:04:06"){ // Measure all together
+        case_number=9;
+    }
 
     switch(case_number){
     case 1://Initialization
@@ -533,6 +534,111 @@ void loop()
             }
         }
         resetFunc();
+        break;
+    case 9://Measure position 1-4 together
+        Flag_from_CAN_Read=0;
+        Position_float_old=0;
+        Position_float_new=CAN_MTS_Read();
+        Position_float=Position_float_new-Position_float_old;
+
+        /******************** Position 1 *******************************/
+        Drop_Caliper_Tool(stepper_Z_L);
+        Serial.println("Blade Moves to #1"); // Blade move to position #2
+        // Approach the chain with the max speed
+        for(measureCnt=0;measureCnt<measureTimes;measureCnt++)
+        {
+        	position_val=moveToPos(2,5);//direction 1 - move right, 2 - move left, stop criteria
+        	// Move back a little bit
+			stepper_blade_L.move(6000);
+			while(stepper_blade_L.run());
+        }
+		positionlist[1]=position_val/measureTimes;
+		position_val=0;
+		Serial.println("Position is:");
+		Serial.print(positionlist[1]);
+        stepper_blade_L.stop();
+        Serial.println("Position #1 Reached!"); // Finish position #1
+
+        /******************** Position 2 *******************************/
+        Lift_Caliper_Tool(stepper_Z_L);
+		//Drive the blade into the gap
+		while(Position_float<positionlist[1]+150){
+				   Position_float=CAN_MTS_Read();
+				   stepper_blade_L.move(-1000);
+				   stepper_blade_L.run();
+		}
+		Drop_Caliper_Tool(stepper_Z_L);
+		Serial.println("Blade Moves to #2"); // Blade move to position #2
+		// Approach the chain with the max speed
+		for(measureCnt=0;measureCnt<measureTimes;measureCnt++)
+		{
+			position_val=moveToPos(1,5);//direction 1 - move right, 2 - move left, stop criteria
+			// Move back a little bit
+			stepper_blade_L.move(-6000);
+			while(stepper_blade_L.run());
+		}
+		positionlist[2]=position_val/measureTimes;
+		position_val=0;
+		Serial.println("Position is:");
+		Serial.print(positionlist[2]);
+		stepper_blade_L.stop();
+		Serial.println("Position #2 Reached!"); // Finish position #2
+
+		/******************** Position 3 *******************************/
+		Serial.println("Blade Moves to #3"); // Blade move to position #3
+		// Approach the chain with the max speed
+		for(measureCnt=0;measureCnt<measureTimes;measureCnt++)
+		{
+			position_val=moveToPos(2,5);//direction 1 - move right, 2 - move left, stop criteria
+			// Move back a little bit
+			stepper_blade_L.move(6000);
+			while(stepper_blade_L.run());
+		}
+		positionlist[3]=position_val/measureTimes;
+		position_val=0;
+		Serial.println("Position is:");
+		Serial.print(positionlist[3]);
+		stepper_blade_L.stop();
+		Serial.println("Position #3 Reached!"); // Finish position #3
+
+		/******************** Position 4 *******************************/
+        Lift_Caliper_Tool(stepper_Z_L);
+        Serial.println("Blade Moves to #4"); // Blade move to position #4
+        //Drive the blade into the gap
+	    while(Position_float<positionlist[3]+150){
+				  Position_float=CAN_MTS_Read();
+				  stepper_blade_L.move(-1000);
+				  stepper_blade_L.run();
+	   }
+	   Drop_Caliper_Tool(stepper_Z_L);
+	   Serial.println("Blade Moves to #2"); // Blade move to position #2
+	   // Approach the chain with the max speed
+	   for(measureCnt=0;measureCnt<measureTimes;measureCnt++)
+	   {
+		position_val+=moveToPos(1,5);//direction 1 - move right, 2 - move left, stop criteria
+		// Move back a little bit
+		stepper_blade_L.move(-6000);
+		while(stepper_blade_L.run());
+	   }
+		positionlist[4]=position_val/measureTimes;
+		position_val=0;
+		Serial.println("Position is:");
+		Serial.print(positionlist[4]);
+		stepper_blade_L.stop();
+        Serial.println("Position #4 Reached!"); // Finish position #4
+
+
+        while(Flag_from_CAN_Read!=2){
+            CAN_Send(1,3,5,0,0,0,0,5); // #1 Reached
+            //Serial.println("Master Not Received");
+            delay(1);
+            Flag_from_CAN_Read=Flag_CAN_Read();
+            if(Flag_from_CAN_Read==2){
+                break;
+            }
+        }
+        Serial.println("Master Received");
+
         break;
     default:
         Receive_Master_Command="";delay(1);
