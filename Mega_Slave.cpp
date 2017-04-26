@@ -164,7 +164,7 @@ void setup()
     stepper_Z_L.setCurrentPosition(0);
 
     // Start the MTS sensor
-    CAN.sendMsgBuf(0x00, 0, 2, stm_start);
+    // CAN.sendMsgBuf(0x00, 0, 2, stm_start);
 
 }
 
