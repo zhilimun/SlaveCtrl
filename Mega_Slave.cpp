@@ -315,8 +315,8 @@ void loop()
         {
         	position_val=moveToPos(2,5);//direction 1 - move right, 2 - move left, stop criteria
         	// Move back a little bit
-			stepper_blade_L.move(6000);
-			while(stepper_blade_L.run());
+			//stepper_blade_L.move(6000);
+			//while(stepper_blade_L.run());
         }
 
 		positionlist[1]=position_val/measureTimes;
@@ -342,10 +342,14 @@ void loop()
         Flag_from_CAN_Read=0;
         Position_float=CAN_MTS_Read();
 
-        Lift_Caliper_Tool(stepper_Z_L);
+        // Move back a little bit before moving up
+        stepper_blade_L.move(6000);
+		while(stepper_blade_L.run());
+
+		Lift_Caliper_Tool(stepper_Z_L);
 
         //Drive the blade into the gap
-        while(Position_float<positionlist[1]+150){
+        while(Position_float<positionlist[1]+100){
                    Position_float=CAN_MTS_Read();
                    stepper_blade_L.move(-1000);
                    stepper_blade_L.run();
@@ -360,8 +364,8 @@ void loop()
         {
         	position_val=moveToPos(1,5);//direction 1 - move right, 2 - move left, stop criteria
         	// Move back a little bit
-			stepper_blade_L.move(-6000);
-			while(stepper_blade_L.run());
+			//stepper_blade_L.move(-6000);
+			//while(stepper_blade_L.run());
         }
 
 		positionlist[2]=position_val/measureTimes;
@@ -393,8 +397,8 @@ void loop()
         {
         	position_val=moveToPos(2,5);//direction 1 - move right, 2 - move left, stop criteria
         	// Move back a little bit
-			stepper_blade_L.move(6000);
-			while(stepper_blade_L.run());
+			//stepper_blade_L.move(6000);
+			//while(stepper_blade_L.run());
         }
 
 		positionlist[3]=position_val/measureTimes;
@@ -420,11 +424,16 @@ void loop()
     case 5:
         Flag_from_CAN_Read=0;
         Position_float=CAN_MTS_Read();
+
+        // Move back a little bit before moving up
+		stepper_blade_L.move(6000);
+		while(stepper_blade_L.run());
+
         Lift_Caliper_Tool(stepper_Z_L);
 
         Serial.println("Blade Moves to #4"); // Blade move to position #4
         //Drive the blade into the gap
-	    while(Position_float<positionlist[3]+150){
+	    while(Position_float<positionlist[3]+100){
 				  Position_float=CAN_MTS_Read();
 				  stepper_blade_L.move(-1000);
 				  stepper_blade_L.run();
@@ -437,10 +446,10 @@ void loop()
 	   // Approach the chain with the max speed
 	   for(measureCnt=0;measureCnt<measureTimes;measureCnt++)
 	   {
-		position_val+=moveToPos(1,5);//direction 1 - move right, 2 - move left, stop criteria
-		// Move back a little bit
-		stepper_blade_L.move(-6000);
-		while(stepper_blade_L.run());
+			position_val+=moveToPos(1,5);//direction 1 - move right, 2 - move left, stop criteria
+			// Move back a little bit
+			//stepper_blade_L.move(-6000);
+			//while(stepper_blade_L.run());
 	   }
 
 		positionlist[4]=position_val/measureTimes;
@@ -459,6 +468,10 @@ void loop()
                 break;
             }
         }
+		//Move back a little bit
+        stepper_blade_L.move(-6000);
+		while(stepper_blade_L.run());
+
         Serial.println("Master Received");
         break;
 
@@ -525,7 +538,7 @@ void loop()
     case 8:
         Serial.println("Slave Reboot Detected Jumped In");
         while(Flag_from_CAN_Read!=2){
-            CAN_Send(1,3,5,1,1,1,1,1); // Proximity Head Detected
+            CAN_Send(1,3,5,1,1,1,1,1); // Reboot Confirmed
             //Serial.println("Master Not Received");
             delay(1);
             Flag_from_CAN_Read=Flag_CAN_Read();
