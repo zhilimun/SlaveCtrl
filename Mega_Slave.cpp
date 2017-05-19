@@ -45,6 +45,8 @@ long loopTime1, loopTime2;
 // This vector stores the position data of the caliper tool
 unsigned int positionlist[5]={50,0,0,0,0};//position 0, 1,2,3,4
 
+
+
 void doEncoder()
 {
 	 if (digitalRead(encoder0PinA) == digitalRead(encoder0PinB)) {
@@ -336,15 +338,17 @@ void loop()
             }
         }
         Serial.println("Master Received");
-
+        // Move back a little bit
+		stepper_blade_L.move(6000);
+		while(stepper_blade_L.run());
         break;
     case 3://Measure position 2
         Flag_from_CAN_Read=0;
         Position_float=CAN_MTS_Read();
 
         // Move back a little bit before moving up
-        stepper_blade_L.move(6000);
-		while(stepper_blade_L.run());
+        //stepper_blade_L.move(6000);
+		//while(stepper_blade_L.run());
 
 		Lift_Caliper_Tool(stepper_Z_L);
 
@@ -385,6 +389,10 @@ void loop()
             }
         }
         Serial.println("Master Received");
+
+        // Move back a little
+		stepper_blade_L.move(-6000);
+		while(stepper_blade_L.run());
         break;
 
     case 4:
@@ -419,6 +427,10 @@ void loop()
             }
         }
         Serial.println("Master Received");
+
+        // Move back a little
+		stepper_blade_L.move(6000);
+		while(stepper_blade_L.run());
         break;
 
     case 5:
@@ -426,8 +438,8 @@ void loop()
         Position_float=CAN_MTS_Read();
 
         // Move back a little bit before moving up
-		stepper_blade_L.move(6000);
-		while(stepper_blade_L.run());
+		//stepper_blade_L.move(6000);
+		//while(stepper_blade_L.run());
 
         Lift_Caliper_Tool(stepper_Z_L);
 
