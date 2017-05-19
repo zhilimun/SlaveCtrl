@@ -48,6 +48,43 @@ long loopTime1, loopTime2;
 // This vector stores the position data of the caliper tool
 unsigned int positionlist[5]={50,0,0,0,0};//position 0, 1,2,3,4
 
+// Check if an emergency happens during the operation --> stop everyting
+void checkTermin()
+{
+    String Receive_CAN;
+    String Receive_Master_Command="";
+
+    unsigned int canId;
+    unsigned char len = 0;
+    unsigned char buf[8];
+
+	// Check the received CAN message
+    CAN.readMsgBuf(&len, buf);    // read data,  len: data length, buf: data buf
+    canId = CAN.getCanId();
+
+    char str[23];
+    unsigned char * pin = buf;
+    const char * hex = "0123456789ABCDEF";
+    char * pout = str;
+    String Result_String;
+    for(; pin < buf+sizeof(buf); pout+=3, pin++){
+        pout[0] = hex[(*pin>>4) & 0xF];
+        pout[1] = hex[ *pin     & 0xF];
+        pout[2] = ':';
+    }
+    pout[-1] = 0;
+    Receive_CAN = String(str);
+
+    if (canId==128){ // Message from Master Controller ID 0x0080 = 128
+    	if(Receive_Master_Command=="02:04:06:00:00:00:00:00"){
+    		stepper_blade_L.stop();
+    		stepper_Z_L.stop();
+    		termin();
+    }}
+
+
+
+}
 
 
 
@@ -84,6 +121,8 @@ int moveToPos(unsigned char caseNo, unsigned char stopcrit)
     encoder1Pos=encoder0Pos;
 
     while(1){
+
+    	checkTermin();
 
         stepper_blade_L.move(turnstep);
         stepper_blade_L.run();
@@ -288,6 +327,7 @@ void loop()
 
             stepper_blade_L.move(1000);
             stepper_blade_L.run();
+            checkTermin();
             //stepper_blade_L.runSpeed();
         }
         stepper_blade_L.stop();
@@ -529,7 +569,8 @@ void loop()
                 break;
             }
         }
-*/
+         */
+        /*
         while(1){
             CAN.readMsgBuf(&len, buf);    // read data,  len: data length, buf: data buf
             canId = CAN.getCanId();
@@ -556,6 +597,7 @@ void loop()
             }
         }
         Serial.println("Master Received");
+        */
         break;
 
     case 8:
@@ -694,6 +736,9 @@ void termin()
 void Lift_Caliper_Tool(AccelStepper stepper_Z_L){
     // Z axis move up -15350 if minus  (Counter Clock Wise)
 	while(digitalRead(Proximity_Top)!=HIGH){
+
+		checkTermin();
+
         stepper_Z_L.move(-1000);
         stepper_Z_L.run();
 		//stepper_Z_L.setSpeed(-150);
@@ -707,6 +752,8 @@ void Drop_Caliper_Tool(AccelStepper stepper_Z_L){
 
      // Z axis move up -15350 if minus  (Counter Clock Wise)
     while(digitalRead(Proximity_Bottom)!=HIGH){
+    	checkTermin();
+
         stepper_Z_L.move(1000);
         stepper_Z_L.run();
     }
