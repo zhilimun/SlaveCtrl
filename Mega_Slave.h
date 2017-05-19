@@ -16,6 +16,7 @@
 //add your function definitions for the project Mega_Slave here
 
 
+void termin();
 
 
 //Do not add code below this line

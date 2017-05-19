@@ -37,6 +37,9 @@ void Drop_Caliper_Tool(AccelStepper stepper_Z_L);
 
 #define encoder0PinA    19
 #define encoder0PinB    18
+
+#define interruptPin 2
+
 unsigned int encoder0Pos = 0;
 unsigned int encoder1Pos = 0;
 long currentTime;
@@ -44,6 +47,7 @@ long loopTime1, loopTime2;
 
 // This vector stores the position data of the caliper tool
 unsigned int positionlist[5]={50,0,0,0,0};//position 0, 1,2,3,4
+
 
 
 
@@ -114,7 +118,6 @@ int moveToPos(unsigned char caseNo, unsigned char stopcrit)
     return Position_float;
 }
 
-
 void setup()
 {
     delay(1000);
@@ -123,6 +126,12 @@ void setup()
 	pinMode(encoder0PinB,INPUT);
 	digitalWrite(encoder0PinB, HIGH);
 	attachInterrupt(5, doEncoder, CHANGE);		//attachInterrupt(4, encoder_z, CHANGE);        //  INT4 --> Pin 19
+
+	// Add the interrupt pin, when sensing change go to "termin" function
+    //pinMode(interruptPin, INPUT);
+    //digitalWrite(interruptPin, HIGH);
+    //attachInterrupt(0, termin, CHANGE);			// INT0 --> Pin2
+
 	//noInterrupts();  	  	  	  	  	  		//attachInterrupt(5, encoder_z, CHANGE);        //  INT5 --> Pin 18
 	delay(1000);
 
@@ -167,6 +176,8 @@ void setup()
 
     // Start the MTS sensor
     CAN.sendMsgBuf(0x00, 0, 2, stm_start);
+
+
 
 }
 
@@ -671,6 +682,12 @@ void loop()
     }
     CAN.clearMsg();
 
+}
+
+void termin()
+{
+	Serial.println("EEnter interrupt");delay(10);
+	resetFunc();
 }
 
 
