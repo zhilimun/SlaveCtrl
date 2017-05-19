@@ -52,37 +52,35 @@ unsigned int positionlist[5]={50,0,0,0,0};//position 0, 1,2,3,4
 void checkTermin()
 {
     String Receive_CAN;
-    String Receive_Master_Command="";
 
     unsigned int canId;
     unsigned char len = 0;
     unsigned char buf[8];
 
 	// Check the received CAN message
-    CAN.readMsgBuf(&len, buf);    // read data,  len: data length, buf: data buf
+	CAN.readMsgBuf(&len, buf);    // read data,  len: data length, buf: data buf
     canId = CAN.getCanId();
 
-    char str[23];
-    unsigned char * pin = buf;
-    const char * hex = "0123456789ABCDEF";
-    char * pout = str;
-    String Result_String;
-    for(; pin < buf+sizeof(buf); pout+=3, pin++){
-        pout[0] = hex[(*pin>>4) & 0xF];
-        pout[1] = hex[ *pin     & 0xF];
-        pout[2] = ':';
-    }
-    pout[-1] = 0;
-    Receive_CAN = String(str);
+    if(canId==128){
+		char str[23];
+		unsigned char * pin = buf;
+		const char * hex = "0123456789ABCDEF";
+		char * pout = str;
 
-    if (canId==128){ // Message from Master Controller ID 0x0080 = 128
-    	if(Receive_Master_Command=="02:04:06:00:00:00:00:00"){
+		for(; pin < buf+sizeof(buf); pout+=3, pin++){
+			pout[0] = hex[(*pin>>4) & 0xF];
+			pout[1] = hex[ *pin     & 0xF];
+			pout[2] = ':';
+		}
+		pout[-1] = 0;
+		Receive_CAN = String(str);
+
+    	if(Receive_CAN=="02:04:06:00:00:00:00:00"){
     		stepper_blade_L.stop();
     		stepper_Z_L.stop();
     		termin();
-    }}
-
-
+    	}
+    }
 
 }
 
@@ -107,10 +105,10 @@ int moveToPos(unsigned char caseNo, unsigned char stopcrit)
 
 	switch(caseNo){
 	case 1://Approach the chain from left side
-		turnstep=1000;
+		turnstep=2000;
 		break;
 	case 2://Approach the chain from right side
-		turnstep=-1000;
+		turnstep=-2000;
 		break;
 	}
 
@@ -327,7 +325,7 @@ void loop()
 
             stepper_blade_L.move(1000);
             stepper_blade_L.run();
-            checkTermin();
+
             //stepper_blade_L.runSpeed();
         }
         stepper_blade_L.stop();
@@ -500,6 +498,7 @@ void loop()
 				  Position_float=CAN_MTS_Read();
 				  stepper_blade_L.move(-1000);
 				  stepper_blade_L.run();
+
 	   }
 
 	   Drop_Caliper_Tool(stepper_Z_L);
@@ -739,7 +738,7 @@ void Lift_Caliper_Tool(AccelStepper stepper_Z_L){
 
 		checkTermin();
 
-        stepper_Z_L.move(-1000);
+        stepper_Z_L.move(-2000);
         stepper_Z_L.run();
 		//stepper_Z_L.setSpeed(-150);
 		//stepper_Z_L.runSpeed();
@@ -754,7 +753,7 @@ void Drop_Caliper_Tool(AccelStepper stepper_Z_L){
     while(digitalRead(Proximity_Bottom)!=HIGH){
     	checkTermin();
 
-        stepper_Z_L.move(1000);
+        stepper_Z_L.move(2000);
         stepper_Z_L.run();
     }
     stepper_Z_L.stop();
@@ -810,6 +809,13 @@ float CAN_MTS_Read(){
             Magnet_position_string=Receive_CAN.substring(6,8)+Receive_CAN.substring(9,11)+Receive_CAN.substring(12,14);
             Position_float=ConvertString2Int(Magnet_position_string)*0.005;
             //Serial.print("Position :  "); Serial.println(Position_float);Serial.println("\n\r");
+        }
+        if(canId==128){
+        	if(Receive_CAN=="02:04:06:00:00:00:00:00"){
+				stepper_blade_L.stop();
+				stepper_Z_L.stop();
+				termin();
+			}
         }
     }
     return Position_float;
