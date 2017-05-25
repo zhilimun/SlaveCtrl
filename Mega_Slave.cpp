@@ -320,7 +320,7 @@ void loop()
             Position_float=CAN_MTS_Read(); delay(10);
         }
 
-        while(Position_float>100){
+        while(Position_float>62){
             Position_float=CAN_MTS_Read();
 
             stepper_blade_L.move(1000);
